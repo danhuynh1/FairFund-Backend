@@ -1,0 +1,64 @@
+// utils/balanceCalculator.js
+const Expense = require('../models/Expense');
+const Settlement = require('../models/Settlement');
+
+/**
+ * A reusable utility to calculate the net balances for all members of a group.
+ * @param {string} groupId - The ID of the group to calculate balances for.
+ * @param {Array} groupMembers - The array of member objects from the group document.
+ * @returns {Promise<Array>} An array of objects, each containing a userId and their net balance.
+ */
+const calculateBalancesForGroup = async (groupId, groupMembers) => {
+  // Fetch all transactions for the group concurrently
+  const [expenses, settlements] = await Promise.all([
+    Expense.find({ group: groupId }).lean(),
+    Settlement.find({ group: groupId }).lean(),
+  ]);
+
+  const balances = {};
+  // Initialize balances for all group members
+  groupMembers.forEach(member => {
+    const memberId = member._id ? member._id.toString() : member.toString();
+    balances[memberId] = { totalPaid: 0, totalShare: 0 };
+  });
+
+  // Process expenses
+  for (const expense of expenses) {
+    const paidById = expense.paidBy.toString();
+    if (balances[paidById]) {
+      balances[paidById].totalPaid += expense.amount;
+    }
+    for (const split of expense.splits) {
+      const userId = split.user.toString();
+      if (balances[userId]) {
+        balances[userId].totalShare += split.amount;
+      }
+    }
+  }
+
+  // Process settlements
+  for (const settlement of settlements) {
+    const fromId = settlement.from.toString();
+    const toId = settlement.to.toString();
+    if (balances[fromId]) {
+      balances[fromId].totalPaid += settlement.amount;
+    }
+    if (balances[toId]) {
+      balances[toId].totalShare += settlement.amount;
+    }
+  }
+
+  // Calculate the final net balance for each user
+  const finalBalances = Object.keys(balances).map(userId => {
+    const b = balances[userId];
+    const net = b.totalPaid - b.totalShare;
+    return {
+      userId,
+      net: parseFloat(net.toFixed(2)),
+    };
+  });
+
+  return finalBalances;
+};
+
+module.exports = { calculateBalancesForGroup };

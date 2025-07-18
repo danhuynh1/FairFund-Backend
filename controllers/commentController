@@ -1,0 +1,53 @@
+const Comment = require("../models/Comment");
+const Expense = require("../models/Expense");
+
+
+exports.addComment = async (req, res) => {
+  const { expenseId } = req.params;
+  const { message } = req.body;
+  const userId = req.user._id;
+
+  if (!message || !message.trim()) {
+    return res.status(400).json({ message: "Comment message is required." });
+  }
+
+  try {
+    const expense = await Expense.findById(expenseId);
+    if (!expense) {
+      return res.status(404).json({ message: "Expense not found." });
+    }
+
+    const newComment = await Comment.create({
+      expense: expenseId,
+      user: userId,
+      message: message.trim(),
+    });
+
+    const populatedComment = await Comment.findById(newComment._id).populate(
+      "user",
+      "name email"
+    );
+
+    res.status(201).json(populatedComment);
+  } catch (err) {
+    console.error("Error adding comment:", err);
+    res.status(500).json({ message: "Server error while adding comment." });
+  }
+};
+
+
+
+exports.getCommentsByExpense = async (req, res) => {
+  const { expenseId } = req.params;
+
+  try {
+    const comments = await Comment.find({ expense: expenseId })
+      .populate("user", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(comments);
+  } catch (err) {
+    console.error("Error fetching comments:", err);
+    res.status(500).json({ message: "Failed to fetch comments." });
+  }
+};
