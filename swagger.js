@@ -14,6 +14,10 @@ const options = {
         url: "http://localhost:5000",
         description: "Local development server",
       },
+      {
+        url: `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`, // Or '/api' if all your endpoints are prefixed
+        description: "Deployed Production Server (Render)",
+      },
     ],
     components: {
       securitySchemes: {
