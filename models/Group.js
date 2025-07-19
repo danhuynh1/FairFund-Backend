@@ -36,7 +36,6 @@ const groupSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }],
-    // --- ADD THIS FIELD to your schema ---
     budgetPlans: [budgetPlanSchema]
 }, { timestamps: true });
 

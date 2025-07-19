@@ -320,6 +320,42 @@ exports.addBudgetPlan = async (req, res) => {
   }
 };
 
+exports.deleteBudgetPlan = async (req, res) => {
+  const { groupId, categoryId } = req.params;
+
+  if (!categoryId || !groupId) {
+    return res
+      .status(400)
+      .json({ message: "Category and group ids are required for deleting a group budget plan." });
+  }
+
+  try {
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found." });
+    }
+
+    // Optional but recommended: Check if the category already exists to prevent duplicates.
+    const existingPlan = group.budgetPlans.id(categoryId);
+    if (!existingPlan) {
+      return res
+        .status(400)
+        .json({ message: "Category not found." });
+    }
+
+    await Group.updateOne(
+      { _id: groupId },
+      { $pull: { budgetPlans: { _id: categoryId } } }
+    );
+
+    // Send back the entire updated group object
+    res.status(201).json({message: 'Successfully, deleted budget plan'});
+  } catch (err) {
+    console.error("Error deleting budget plan:", err);
+    res.status(500).json({ message: "Server error while deleting budget plan." });
+  }
+};
+
 /**
  * @desc    Get a combined activity feed for a group (expenses and settlements)
  * @route   GET /api/groups/:groupId/activity
@@ -331,7 +367,9 @@ exports.getGroupActivity = async (req, res) => {
 
     // Fetch both expenses and settlements concurrently for better performance
     const [expenses, settlements] = await Promise.all([
-      Expense.find({ group: groupId }).populate("paidBy", "name").lean(), // .lean() makes the query faster and returns plain JavaScript objects
+      Expense.find({ group: groupId })
+        .populate("paidBy splits.user", "name email")
+        .lean(), // .lean() makes the query faster and returns plain JavaScript objects
 
       Settlement.find({ group: groupId })
         .populate("from", "name")
@@ -358,5 +396,39 @@ exports.getGroupActivity = async (req, res) => {
     res
       .status(500)
       .json({ message: "Server error while fetching group activity." });
+  }
+};
+
+/**
+ * @desc    Modifies basic group info such as name and description.
+ * @route   PUT /api/groups/:groupId/edit
+ * @access  Private
+ */
+exports.updateGroupInfo = async (req, res) => {
+  const { groupId } = req.params;
+  const { name, description } = req.body; 
+
+  // Validate that the name is not empty
+  if (!name) {
+    return res
+      .status(400)
+      .json({ message: "Group name is required." });
+  }
+
+  try {
+    const group = await Group.findById(groupId);
+
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    group.name = name;
+    group.description = description;
+    await group.save();
+
+    res.status(200).json({ message: "Group info updated successfully", group });
+  } catch (err) {
+    console.error("Error updating budget:", err);
+    res.status(500).json({ message: "Server error while updating budget." });
   }
 };

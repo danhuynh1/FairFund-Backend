@@ -1,7 +1,10 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { addExpense, getGroupExpenses } = require('../controllers/expenseController');
-const { protect } = require('../middleware/authMiddleware');
+const {
+  addExpense,
+  getGroupExpenses,
+} = require("../controllers/expenseController");
+const { protect } = require("../middleware/authMiddleware");
 
 /**
  * @swagger
@@ -24,6 +27,10 @@ const { protect } = require('../middleware/authMiddleware');
  *               - amount
  *               - group
  *             properties:
+ *               paidBy:
+ *                 type: string
+ *                 description: User ID of the person who paid
+ *                 example: "64f123abc456def7890abcde"
  *               description:
  *                 type: string
  *                 example: "Dinner at sushi restaurant"
@@ -104,7 +111,7 @@ const { protect } = require('../middleware/authMiddleware');
  *                   example: Server error while adding expense
  */
 
-router.post('/add', protect, addExpense);
+router.post("/add", protect, addExpense);
 
 /**
  * @swagger
@@ -144,6 +151,6 @@ router.post('/add', protect, addExpense);
  *                   example: Failed to fetch expenses
  */
 
-router.get('/group/:groupId', protect, getGroupExpenses);
+router.get("/group/:groupId", protect, getGroupExpenses);
 
 module.exports = router;

@@ -12,6 +12,8 @@ const {
  * /api/users/google-login:
  *   post:
  *     summary: Google Sign-In
+ *     tags:
+ *       - User
  *     description: Authenticates a user via Google OAuth token.
  *     requestBody:
  *       required: true

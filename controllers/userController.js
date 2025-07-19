@@ -40,7 +40,7 @@ const googleLogin  = async (req, res) => {
       expiresIn: '7d',
     });
 
-    console.log(token);
+    // console.log(token);
     res.json({ token }); 
 
   } catch (err) {
@@ -53,7 +53,6 @@ const googleLogin  = async (req, res) => {
 
 const createUser = async (req, res) => {
   const { name, email, role } = req.body;
-  console.log(name);
   try {
     const existingUser = await User.findOne({ email });
 

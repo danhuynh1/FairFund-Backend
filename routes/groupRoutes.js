@@ -12,7 +12,9 @@ const {
   getGroupBalances,
   updateGroupBudget,
   addBudgetPlan,
-  getGroupActivity
+  deleteBudgetPlan,
+  getGroupActivity,
+  updateGroupInfo
 } = require("../controllers/groupController");
 
 /**
@@ -305,5 +307,7 @@ router.get("/:groupId/activity", protect, getGroupActivity);
 
 router.route("/:groupId/budget").put(protect, updateGroupBudget);
 router.route("/:groupId/budget-plans").post(protect, addBudgetPlan);
+router.route("/:groupId/:categoryId/delete-budget-plan").delete(protect, deleteBudgetPlan);
+router.route("/:groupId/edit").put(protect, updateGroupInfo);
 
 module.exports = router;
