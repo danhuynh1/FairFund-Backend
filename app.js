@@ -20,6 +20,9 @@ app.use(
     credentials: true,
   })
 );
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
 
 setupSwagger(app);
 
