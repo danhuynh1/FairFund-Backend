@@ -6,7 +6,6 @@ const setupSwagger = require("./swagger");
 dotenv.config();
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 
 app.use("/api/users", require("./routes/userRoutes"));
@@ -24,6 +23,7 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+app.get("/swagger", (req, res) => res.redirect("/swagger/"));
 setupSwagger(app);
 
 module.exports = app;
